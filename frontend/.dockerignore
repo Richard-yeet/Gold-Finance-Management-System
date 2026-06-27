@@ -1,0 +1,10 @@
+.git
+.idea
+.vscode
+node_modules/
+dist/
+*.log
+*.tmp
+*.DS_Store
+Dockerfile
+.dockerignore
