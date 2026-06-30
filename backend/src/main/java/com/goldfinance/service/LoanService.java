@@ -32,6 +32,7 @@ public class LoanService {
     private final LoanNumberGenerator numberGenerator;
     private final LoanAccountingService accountingService;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
     @Transactional
     public LoanResponse create(LoanCreateRequest request) {
@@ -56,6 +57,17 @@ public class LoanService {
         request.jewelleryItems().forEach(itemRequest -> loan.addJewelleryItem(jewelleryItemMapper.toEntity(itemRequest)));
         accountingService.refreshOutstanding(loan, LocalDate.now());
         var saved = loanRepository.save(loan);
+
+        // Notify: Loan Created
+        notificationService.createNotification(
+                com.goldfinance.entity.NotificationType.LOAN_CREATED,
+                "New Loan Created",
+                loan.getLoanNumber() + " for customer " + customer.getName() + " - " + request.principalAmount().toPlainString(),
+                "LOAN",
+                saved.getId(),
+                "/loans/" + saved.getId()
+        );
+
         auditService.record("CREATE", "Loan", saved.getId(), "Created loan " + saved.getLoanNumber());
         return loanMapper.toResponse(saved);
     }
@@ -76,12 +88,26 @@ public class LoanService {
     @Transactional
     public LoanResponse update(Long id, LoanUpdateRequest request) {
         var loan = findDetailedLoan(id);
+        var oldStatus = loan.getStatus();
         loan.setInterestRate(request.interestRate());
         loan.setInterestType(request.interestType());
         loan.setInterestPaymentFrequency(request.interestPaymentFrequency());
         loan.setStatus(request.status());
         loan.setNotes(request.notes());
         accountingService.refreshOutstanding(loan, LocalDate.now());
+
+        // Notify: Loan Status Changed
+        if (oldStatus != request.status()) {
+            notificationService.createNotification(
+                    com.goldfinance.entity.NotificationType.LOAN_STATUS_CHANGED,
+                    "Loan Status Changed",
+                    "Loan " + loan.getLoanNumber() + " status changed from " + oldStatus + " to " + request.status(),
+                    "LOAN",
+                    id,
+                    "/loans/" + id
+            );
+        }
+
         auditService.record("UPDATE", "Loan", id, "Updated loan " + loan.getLoanNumber());
         return loanMapper.toResponse(loan);
     }
@@ -95,6 +121,17 @@ public class LoanService {
         }
         loan.setStatus(LoanStatus.CLOSED);
         loan.setClosedDate(LocalDate.now());
+
+        // Notify: Loan Closed
+        notificationService.createNotification(
+                com.goldfinance.entity.NotificationType.LOAN_CLOSED,
+                "Loan Closed",
+                "Loan " + loan.getLoanNumber() + " has been fully settled and closed.",
+                "LOAN",
+                id,
+                "/loans/" + id
+        );
+
         auditService.record("CLOSE", "Loan", id, "Closed loan " + loan.getLoanNumber());
         return loanMapper.toResponse(loan);
     }
@@ -111,6 +148,17 @@ public class LoanService {
         }
         loan.setNotes((loan.getNotes() == null ? "" : loan.getNotes() + "\n") + "Renewed on " + LocalDate.now());
         accountingService.refreshOutstanding(loan, LocalDate.now());
+
+        // Notify: Loan Renewed
+        notificationService.createNotification(
+                com.goldfinance.entity.NotificationType.LOAN_RENEWED,
+                "Loan Renewed",
+                "Loan " + loan.getLoanNumber() + " has been renewed.",
+                "LOAN",
+                id,
+                "/loans/" + id
+        );
+
         auditService.record("RENEW", "Loan", id, "Renewed loan " + loan.getLoanNumber());
         return loanMapper.toResponse(loan);
     }
@@ -120,4 +168,3 @@ public class LoanService {
                 .orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
     }
 }
-

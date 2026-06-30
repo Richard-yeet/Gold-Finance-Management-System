@@ -29,6 +29,7 @@ public class PaymentService {
     private final LoanNumberGenerator numberGenerator;
     private final PaymentMapper paymentMapper;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
     @Transactional
     public PaymentResponse record(Long loanId, PaymentRequest request) {
@@ -85,6 +86,7 @@ public class PaymentService {
         loan.addPayment(payment);
         paymentRepository.save(payment);
         accountingService.refreshOutstanding(loan, LocalDate.now());
+
         if (loan.getOutstandingAmount().compareTo(BigDecimal.ZERO) == 0) {
             loan.setStatus(LoanStatus.CLOSED);
             loan.setClosedDate(request.paymentDate());
@@ -94,6 +96,29 @@ public class PaymentService {
         }
 
         loanRepository.save(loan);
+
+        // Notify: Payment Received
+        notificationService.createNotification(
+                com.goldfinance.entity.NotificationType.PAYMENT_RECEIVED,
+                "Payment Received",
+                "Received " + request.paymentType() + " of " + request.amount().toPlainString() + " for loan " + loan.getLoanNumber(),
+                "PAYMENT",
+                payment.getId(),
+                "/loans/" + loanId + "/payments"
+        );
+
+        // If loan was closed by this payment, send additional notification
+        if (loan.getStatus() == LoanStatus.CLOSED) {
+            notificationService.createNotification(
+                    com.goldfinance.entity.NotificationType.LOAN_CLOSED,
+                    "Loan Closed",
+                    "Loan " + loan.getLoanNumber() + " has been fully settled and closed via payment.",
+                    "LOAN",
+                    loanId,
+                    "/loans/" + loanId
+            );
+        }
+
         auditService.record("PAYMENT", "Loan", loanId, "Recorded receipt " + payment.getReceiptNumber());
         return paymentMapper.toResponse(payment);
     }

@@ -6,6 +6,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import Sidebar from "../components/layout/Sidebar";
 import TopAppBar from "../components/layout/TopAppBar";
+import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
 
 const DRAWER_WIDTH = 240;
 
@@ -13,6 +14,9 @@ export default function MainLayout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Initialize WebSocket connection for real-time notifications
+  useNotificationWebSocket();
 
   const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
 

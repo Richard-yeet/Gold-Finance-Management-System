@@ -14,12 +14,11 @@ import Divider from "@mui/material/Divider";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
-import Badge from "@mui/material/Badge";
 import { styled, alpha } from "@mui/material/styles";
 import { useAuth } from "../../context/AuthContext";
+import NotificationBell from "../notifications/NotificationBell";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -107,13 +106,7 @@ export default function TopAppBar({ drawerWidth, onMenuClick }: TopAppBarProps) 
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <Tooltip title="Notifications">
-          <IconButton color="inherit" data-testid="button-notifications">
-            <Badge badgeContent={3} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-        </Tooltip>
+        <NotificationBell />
 
         <Tooltip title="Account">
           <IconButton

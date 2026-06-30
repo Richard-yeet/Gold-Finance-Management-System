@@ -28,6 +28,7 @@ public class CustomerService {
     private final LoanMapper loanMapper;
     private final LoanNumberGenerator numberGenerator;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
     @Transactional
     public CustomerResponse create(CustomerRequest request) {
@@ -37,7 +38,18 @@ public class CustomerService {
         var customer = customerMapper.toEntity(request);
         customer.setCustomerCode(numberGenerator.nextCustomerCode());
         var saved = customerRepository.save(customer);
-        auditService.record("CREATE", "Customer", saved.getId(), "Created customer " + saved.getCustomerCode());
+
+        // Notify: Customer Created
+        notificationService.createNotification(
+                com.goldfinance.entity.NotificationType.CUSTOMER_CREATED,
+                "Customer Created",
+                "New customer " + saved.getName() + " (" + saved.getCustomerCode() + ") has been added.",
+                "CUSTOMER",
+                saved.getId(),
+                "/customers/" + saved.getId()
+        );
+
+        auditService.record("CREATE", "Customer", saved.getId(), "Created customer " + customer.getCustomerCode());
         return customerMapper.toResponse(saved);
     }
 
@@ -50,6 +62,17 @@ public class CustomerService {
     public CustomerResponse update(Long id, CustomerRequest request) {
         var customer = findCustomer(id);
         customerMapper.update(request, customer);
+
+        // Notify: Customer Updated
+        notificationService.createNotification(
+                com.goldfinance.entity.NotificationType.CUSTOMER_UPDATED,
+                "Customer Updated",
+                "Customer " + customer.getName() + " (" + customer.getCustomerCode() + ") has been updated.",
+                "CUSTOMER",
+                id,
+                "/customers/" + id
+        );
+
         auditService.record("UPDATE", "Customer", id, "Updated customer " + customer.getCustomerCode());
         return customerMapper.toResponse(customer);
     }
@@ -75,4 +98,3 @@ public class CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
     }
 }
-
