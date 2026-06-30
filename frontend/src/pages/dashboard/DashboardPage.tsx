@@ -14,13 +14,13 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PeopleIcon from "@mui/icons-material/People";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import TodayIcon from "@mui/icons-material/Today";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import PageHeader from "../../components/common/PageHeader";
 import StatCard from "../../components/common/StatCard";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import DashboardNotificationWidget from "../../components/notifications/DashboardNotificationWidget";
 import { dashboardService } from "../../services/dashboardService";
 import dayjs from "dayjs";
 
@@ -126,36 +126,9 @@ export default function DashboardPage() {
           </Card>
         </Grid>
 
-        {/* Notifications */}
+        {/* Notifications - using shared DashboardNotificationWidget */}
         <Grid size={{ xs: 12, md: 5 }}>
-          <Card sx={{ height: "100%" }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <NotificationsActiveIcon color="warning" />
-                <Typography variant="h6" fontWeight={700}>Notifications</Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
-              {data?.notifications && data.notifications.length > 0 ? (
-                <List disablePadding>
-                  {data.notifications.map((msg, i) => (
-                    <ListItem
-                      key={i}
-                      disablePadding
-                      sx={{ py: 1.5, borderBottom: i < data.notifications.length - 1 ? "1px solid" : "none", borderColor: "divider" }}
-                    >
-                      <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "warning.main", mr: 1.5, flexShrink: 0, mt: 0.5 }} />
-                      <Typography variant="body2">{msg}</Typography>
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ py: 6, textAlign: "center" }}>
-                  <NotificationsActiveIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
-                  <Typography color="text.secondary" variant="body2">No notifications</Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+          <DashboardNotificationWidget />
         </Grid>
       </Grid>
     </Box>

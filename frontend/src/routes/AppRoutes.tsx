@@ -15,6 +15,7 @@ import BankLoanFormPage from "../pages/bankLoans/BankLoanFormPage";
 import BankLoanDetailPage from "../pages/bankLoans/BankLoanDetailPage";
 import ReportsPage from "../pages/reports/ReportsPage";
 import SettingsPage from "../pages/settings/SettingsPage";
+import NotificationPage from "../pages/notifications/NotificationPage";
 
 export default function AppRoutes() {
   return (
@@ -45,6 +46,8 @@ export default function AppRoutes() {
         <Route path="/bank-loans/new" element={<BankLoanFormPage />} />
         <Route path="/bank-loans/:id" element={<BankLoanDetailPage />} />
         <Route path="/bank-loans/:id/edit" element={<BankLoanFormPage />} />
+
+        <Route path="/notifications" element={<NotificationPage />} />
 
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />

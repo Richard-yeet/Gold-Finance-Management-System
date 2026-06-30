@@ -29,9 +29,15 @@ axiosInstance.interceptors.response.use(
     const body = response.data;
     if (body && typeof body === "object" && "success" in body) {
       const inner = body.data;
-      // Spring paginated list → extract the content array
+      // If the caller requested a paginated response (X-Preserve-Page header),
+      // keep the full page object instead of stripping to just content[]
+      const preservePage = response.config.headers?.["X-Preserve-Page"] === "true";
       if (inner && typeof inner === "object" && Array.isArray(inner.content)) {
-        response.data = inner.content;
+        if (preservePage) {
+          response.data = inner; // Keep full page: { content, totalElements, totalPages, number, size }
+        } else {
+          response.data = inner.content;
+        }
       } else {
         response.data = inner ?? body;
       }

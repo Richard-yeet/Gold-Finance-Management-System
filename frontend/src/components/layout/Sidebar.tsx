@@ -17,6 +17,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DiamondIcon from "@mui/icons-material/Diamond";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useAuth } from "../../context/AuthContext";
 
 const NAV_ITEMS = [
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { label: "Customers", icon: <PeopleIcon />, path: "/customers" },
   { label: "Loans", icon: <AccountBalanceWalletIcon />, path: "/loans" },
   { label: "Bank Loans", icon: <AccountBalanceIcon />, path: "/bank-loans" },
+  { label: "Notifications", icon: <NotificationsIcon />, path: "/notifications" },
   { label: "Reports", icon: <AssessmentIcon />, path: "/reports" },
   { label: "Settings", icon: <SettingsIcon />, path: "/settings" },
 ];

@@ -22,10 +22,22 @@ public class BankLoanService {
     private final BankLoanRepository bankLoanRepository;
     private final BankLoanMapper bankLoanMapper;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
     @Transactional
     public BankLoanResponse create(BankLoanRequest request) {
         var saved = bankLoanRepository.save(bankLoanMapper.toEntity(request));
+
+        // Notify: Bank Loan Created
+        notificationService.createNotification(
+                com.goldfinance.entity.NotificationType.BANK_LOAN_CREATED,
+                "Bank Loan Created",
+                "New bank loan " + saved.getLoanNumber() + " from " + saved.getBankName() + " for " + saved.getLoanAmount().toPlainString(),
+                "BANK_LOAN",
+                saved.getId(),
+                "/bank-loans/" + saved.getId()
+        );
+
         auditService.record("CREATE", "BankLoan", saved.getId(), "Created bank loan " + saved.getLoanNumber());
         return bankLoanMapper.toResponse(saved);
     }
@@ -45,8 +57,8 @@ public class BankLoanService {
         return bankLoanRepository.findByStatusAndRenewalDateBetweenOrderByRenewalDateAsc(
                         BankLoanStatus.ACTIVE,
                         LocalDate.now(),
-                        LocalDate.now().plusDays(days)
-                ).stream()
+                        LocalDate.now().plusDays(days))
+                .stream()
                 .map(bankLoanMapper::toResponse)
                 .toList();
     }
@@ -55,6 +67,19 @@ public class BankLoanService {
     public BankLoanResponse update(Long id, BankLoanRequest request) {
         var bankLoan = find(id);
         bankLoanMapper.update(request, bankLoan);
+
+        // Notify: Bank Loan Updated (renewal date change could trigger renewal due)
+        if (bankLoan.getRenewalDate().isBefore(LocalDate.now().plusDays(30))) {
+            notificationService.createNotification(
+                    com.goldfinance.entity.NotificationType.BANK_LOAN_RENEWAL_DUE,
+                    "Bank Loan Renewal Due",
+                    "Bank loan " + bankLoan.getLoanNumber() + " from " + bankLoan.getBankName() + " renewal is due on " + bankLoan.getRenewalDate(),
+                    "BANK_LOAN",
+                    id,
+                    "/bank-loans/" + id
+            );
+        }
+
         auditService.record("UPDATE", "BankLoan", id, "Updated bank loan " + bankLoan.getLoanNumber());
         return bankLoanMapper.toResponse(bankLoan);
     }
@@ -64,4 +89,3 @@ public class BankLoanService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bank loan not found"));
     }
 }
-
